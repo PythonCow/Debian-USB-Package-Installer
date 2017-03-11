@@ -4,14 +4,17 @@ import string
 
 #Class that finds dependencies of a Package when fed URL from Debian Packages site.
 class Dependency_finder(HTMLParser):
-    def __init__(self, past_dependencies=[]):
+    def __init__(self, past_dependencies=[], suggestions=False, reccomendations=False):
         HTMLParser.__init__(self)
         self.past_dependencies = past_dependencies
+        self.suggestions = suggestions
+        self.reccomendations = reccomendations
         #dependencies is a dictionary where the key is the link to the dependency and the value is the name.
         self.dependencies = {}
         self.dt = False
         self.dep = False
         self.link = False
+
     def handle_starttag(self, tag, attrs):
         if tag == "dt":
             self.dt = True
@@ -27,7 +30,7 @@ class Dependency_finder(HTMLParser):
             
     def handle_data(self, data):
         if self.dt:
-            if data == "dep:":
+            if data == "dep:" or self.suggestions and data == "sug:" or self.reccomendations and data == "rec:":
                 self.dep = True
                 self.dt = False
         elif self.link:
@@ -47,7 +50,7 @@ def compare_package_names(pkg1, pkg2):
 if __name__ == "__main__":
 
     import urllib
-    find_depends = Dependency_finder(["make"])
+    find_depends = Dependency_finder(["make"], suggestions=True)
     html_to_parse = urllib.urlretrieve("https://packages.debian.org/stable/alien", "alien.html")
     data = open("alien.html", "r").read()
     find_depends.feed(data)
